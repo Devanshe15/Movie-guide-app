@@ -1,58 +1,59 @@
-//Initial References
+// Initial References
 let movieNameRef = document.getElementById("movie-name");
 let searchBtn = document.getElementById("search-btn");
 let result = document.getElementById("result");
-//Function to fetch data from API
+
+// Function to fetch data from API
 let getMovie = () => {
   let movieName = movieNameRef.value;
-  let url = `https://api.themoviedb.org/3/movie/550?api_key=b3e9f0dacf14b8b55586fdbe0d856017`;
-  //If input field is empty
+  
+  // If input field is empty
   if (movieName.length <= 0) {
     result.innerHTML = `<h3 class="msg">Please Enter A Movie Name</h3>`;
-  }
-  //If input field is NOT empty
-  else {
+  } else {
+    // Use encodeURIComponent to handle movie names with spaces or special characters
+    let encodedMovieName = encodeURIComponent(movieName);
+    let url = `https://api.themoviedb.org/3/search/movie?api_key=b3e9f0dacf14b8b55586fdbe0d856017&query=${encodedMovieName}`;
+
     fetch(url)
       .then((resp) => resp.json())
       .then((data) => {
-        //If movie exists in database
-        if (data.Response == "True") {
+        // Check if the response contains results
+        if (data.results && data.results.length > 0) {
+          let movie = data.results[0]; // Assuming you want details for the first result
+
           result.innerHTML = `
             <div class="info">
-                <img src=${data.Poster} class="poster">
+                <img src="https://image.tmdb.org/t/p/w500/${movie.poster_path}" class="poster">
                 <div>
-                    <h2>${data.Title}</h2>
+                    <h2>${movie.title}</h2>
                     <div class="rating">
                         <img src="star-icon.svg">
-                        <h4>${data.imdbRating}</h4>
+                        <h4>${movie.vote_average}</h4>
                     </div>
                     <div class="details">
-                        <span>${data.Rated}</span>
-                        <span>${data.Year}</span>
-                        <span>${data.Runtime}</span>
+                        <span>${movie.release_date}</span>
+                        <span>${movie.runtime} min</span>
                     </div>
                     <div class="genre">
-                        <div>${data.Genre.split(",").join("</div><div>")}</div>
+                        <div>${movie.genres.map(genre => genre.name).join("</div><div>")}</div>
                     </div>
                 </div>
             </div>
-            <h3>Plot:</h3>
-            <p>${data.Plot}</p>
-            <h3>Cast:</h3>
-            <p>${data.Actors}</p>
-            
-        `;
-        }
-        //If movie does NOT exists in database
-        else {
-          result.innerHTML = `<h3 class='msg'>${data.Error}</h3>`;
+            <h3>Overview:</h3>
+            <p>${movie.overview}</p>
+          `;
+        } else {
+          result.innerHTML = `<h3 class='msg'>Movie not found</h3>`;
         }
       })
-      //If error occurs
+      // If error occurs
       .catch(() => {
-        result.innerHTML = `<h3 class="msg">Error Occured</h3>`;
+        result.innerHTML = `<h3 class="msg">Error Occurred</h3>`;
       });
   }
 };
+
 searchBtn.addEventListener("click", getMovie);
-window.addEventListener("load", getMovie);
+// Remove the window.load event listener since it's unnecessary
+
